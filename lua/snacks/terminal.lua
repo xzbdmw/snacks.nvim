@@ -34,7 +34,6 @@ Snacks.config.style("terminal", {
   },
   wo = {},
   keys = {
-    q = "hide",
     gf = function(self)
       local f = vim.fn.findfile(vim.fn.expand("<cfile>"), "**")
       if f == "" then
@@ -149,11 +148,12 @@ function M.open(cmd, opts)
       terminal:close()
     end)
   end, { buf = true })
+  local cwd = vim.fn.expand("%:p:h")
 
   terminal:show()
   vim.api.nvim_buf_call(terminal.buf, function()
-    jobstart(cmd or M.parse(opts.shell or vim.o.shell), {
-      cwd = opts.cwd,
+    jobstart({ "yazi", cwd } or M.parse(opts.shell or vim.o.shell), {
+      cwd = vim.uv.cwd(),
       env = opts.env,
       term = true,
     })

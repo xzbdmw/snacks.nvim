@@ -134,26 +134,16 @@ end
 
 -- Returns a list of regular and extmark signs sorted by priority (high to low)
 ---@private
----@param win number
 ---@param buf number
 ---@param lnum number
 ---@return snacks.statuscolumn.Sign[]
-function M.line_signs(win, buf, lnum)
+function M.line_signs(buf, lnum)
   local buf_signs = sign_cache[buf]
   if not buf_signs then
     buf_signs = M.buf_signs(buf)
     sign_cache[buf] = buf_signs
   end
   local signs = buf_signs[lnum] or {}
-
-  -- Get fold signs
-  vim.api.nvim_win_call(win, function()
-    if vim.fn.foldclosed(lnum) >= 0 then
-      signs[#signs + 1] = { text = vim.opt.fillchars:get().foldclose or "", texthl = "Folded", type = "fold" }
-    elseif config.folds.open and tostring(vim.treesitter.foldexpr(vim.v.lnum)):sub(1, 1) == ">" then
-      signs[#signs + 1] = { text = vim.opt.fillchars:get().foldopen or "", type = "fold" }
-    end
-  end)
 
   -- Sort by priority
   table.sort(signs, function(a, b)
@@ -193,7 +183,7 @@ function M._get()
   if show_signs then
     local buf = vim.api.nvim_win_get_buf(win)
     local is_file = vim.bo[buf].buftype == ""
-    local signs = M.line_signs(win, buf, vim.v.lnum)
+    local signs = M.line_signs(buf, vim.v.lnum)
 
     if #signs > 0 then
       local signs_by_type = {} ---@type table<snacks.statuscolumn.Sign.type,snacks.statuscolumn.Sign>
@@ -223,10 +213,10 @@ function M._get()
           right.texthl = git.texthl
         end
       end
-      components[1] = left and M.icon(left) or "  " -- left
+      components[1] = vim.g.sign_padding and (left and M.icon(left) or "  ") or ""
       components[3] = is_file and (right and M.icon(right) or "  ") or "" -- right
     else
-      components[1] = "  "
+      components[1] = vim.g.sign_padding and "  " or ""
       components[3] = is_file and "  " or ""
     end
   end
