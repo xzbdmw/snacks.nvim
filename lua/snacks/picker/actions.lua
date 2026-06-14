@@ -35,6 +35,12 @@ function M.jump(picker, _, action)
   end
 
   local items = picker:selected({ fallback = true })
+  if picker.opts.smart_learn and #items > 0 then
+    local ok, err = pcall(require("snacks.picker.core.smart").on_select, picker, items)
+    if not ok then
+      Snacks.notify.error(err, { title = "Snacks Smart" })
+    end
+  end
 
   if picker.opts.jump.close then
     picker:close()

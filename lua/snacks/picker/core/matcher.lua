@@ -6,8 +6,10 @@ local Async = require("snacks.picker.util.async")
 
 ---@class snacks.picker.matcher.Config
 ---@field regex? boolean used internally for positions of sources that use regex
+---@field on_start? fun(matcher: snacks.picker.Matcher, picker: snacks.Picker)
 ---@field on_match? fun(matcher: snacks.picker.Matcher, item: snacks.picker.Item)
 ---@field on_done? fun(matcher: snacks.picker.Matcher)
+---@field on_close? fun(matcher: snacks.picker.Matcher)
 
 ---@class snacks.picker.Matcher
 ---@field opts snacks.picker.matcher.Config
@@ -77,15 +79,23 @@ end
 
 function M:close()
   self:abort()
+  if self.opts.on_close then
+    self.opts.on_close(self)
+  end
   self.task = Async.nop()
+  self.picker = nil
 end
 
 ---@param picker snacks.Picker
 function M:run(picker)
   self.task:abort()
   picker.list:clear()
-
+  self.picker = picker
   self.cwd = vim.fs.normalize(picker.opts.cwd or (vim.uv or vim.loop).cwd() or ".")
+  if self.opts.on_start then
+    self.opts.on_start(self, picker)
+  end
+
   self.sorting = not self:empty() or picker.opts.matcher.sort_empty
 
   -- PERF: fast path for empty pattern
@@ -345,7 +355,7 @@ function M:update(item)
   else
     item.score = 0
   end
-  return score > 0
+  return item.score > 0
 end
 
 --- Matches an item and returns the score.

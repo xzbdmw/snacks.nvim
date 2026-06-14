@@ -768,11 +768,9 @@ M.select = {
 M.smart = {
   multi = { "buffers", "recent", "files" },
   format = "file", -- use `file` format for all sources
-  matcher = {
-    cwd_bonus = true, -- boost cwd matches
-    frecency = true, -- use frecency boosting
-    sort_empty = true, -- sort even when the filter is empty
-  },
+  config = function(opts)
+    return require("snacks.picker.core.smart").setup(opts)
+  end,
   transform = "unique_file",
 }
 
